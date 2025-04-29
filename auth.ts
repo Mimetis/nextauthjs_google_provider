@@ -1,18 +1,16 @@
 import NextAuth from "next-auth";
 import "next-auth/jwt";
-
+import sql from "mssql";
 import Google from "next-auth/providers/google";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   debug: !!process.env.AUTH_DEBUG,
-  theme: { logo: "https://authjs.dev/img/logo-sm.png" },
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
   ],
-  basePath: "/auth",
   session: { strategy: "jwt" },
   callbacks: {
     authorized({ request, auth }) {
@@ -22,6 +20,24 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     jwt({ token, trigger, session, account }) {
       if (trigger === "update") token.name = session.user.name;
+
+      const setup = {
+        user: process.env.MSSQL_USER,
+        password: process.env.MSSQL_PASSWORD,
+        server: process.env.MSSQL_SERVER || "localhost",
+        database: process.env.MSSQL_DATABASE,
+        options: {
+          trustServerCertificate: true, // Set to true if using self-signed certificates
+        },
+      };
+
+      const pool = new sql.ConnectionPool(setup);
+
+      pool.connect().then((c) => {
+        const request = new sql.Request(c);
+        c.close();
+      });
+
       return token;
     },
     async session({ session, token }) {

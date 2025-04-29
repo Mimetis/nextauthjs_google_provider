@@ -1,4 +1,10 @@
 /** @type {import("next").NextConfig} */
 module.exports = {
-  output: "standalone",
+  // webpack: (config, { webpack }) => {
+  //   config.plugins.push(new webpack.IgnorePlugin({
+  //     resourceRegExp: /^node:url$|^pg-native$|^cloudflare:sockets$/,
+  //   }))
+
+  //   return config
+  // },
 }
